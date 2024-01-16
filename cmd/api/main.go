@@ -20,12 +20,15 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("parsing multipart upload")
+
 		err := r.ParseMultipartForm(10 << 20) // Max upload size set to 10 MB
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
+		log.Println("fetching form file")
 		file, _, err := r.FormFile("wavFile")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -33,6 +36,7 @@ func main() {
 		}
 		defer file.Close()
 
+		log.Println("calling internal handler")
 		response, err := handler.Handle(r.Context(), &voicegpt.Request{
 			VoiceData: file,
 		})
@@ -41,6 +45,7 @@ func main() {
 			return
 		}
 
+		log.Println("writing response")
 		w.Header().Set("Content-Type", "audio/mpeg")
 		if _, err := io.Copy(w, response.VoiceData); err != nil {
 			log.Printf("Error writing MP3 data to response: %v", err)
