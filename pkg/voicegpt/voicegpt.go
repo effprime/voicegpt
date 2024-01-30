@@ -29,11 +29,10 @@ type VoiceGPTHandler struct {
 }
 
 type VoiceGPTOptions struct {
-	GPTModel   string
-	SessionDir string
+	GPTModel string
 }
 
-func NewVoiceGPTHandler(opts *VoiceGPTOptions) (*VoiceGPTHandler, error) {
+func NewVoiceGPTHandler(sessions *FileSessionStorage, opts *VoiceGPTOptions) (*VoiceGPTHandler, error) {
 	openAIKey := os.Getenv(OpenAIKeyEnvKey)
 	if openAIKey == "" {
 		return nil, fmt.Errorf("OpenAI key not founded at env var: %s", OpenAIKeyEnvKey)
@@ -41,10 +40,6 @@ func NewVoiceGPTHandler(opts *VoiceGPTOptions) (*VoiceGPTHandler, error) {
 	googleCredsPath := os.Getenv(GoogleCloudCredentialsKey)
 	if googleCredsPath == "" {
 		return nil, fmt.Errorf("Google Cloud credentials path not found at env var: %s", googleCredsPath)
-	}
-	sessions, err := NewFileSessionStorage(opts.SessionDir)
-	if err != nil {
-		return nil, err
 	}
 	return &VoiceGPTHandler{
 		openAIKey: openAIKey,

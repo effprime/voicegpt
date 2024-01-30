@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -10,15 +11,36 @@ import (
 )
 
 func main() {
-	handler, err := voicegpt.NewVoiceGPTHandler(&voicegpt.VoiceGPTOptions{
-		SessionDir: "/home/babybear/.voicegpt-sessions",
-		GPTModel:   "gpt-4",
+	sessions, err := voicegpt.NewFileSessionStorage("/home/babybear/.voicegpt-sessions")
+	if err != nil {
+		log.Fatalf("Error getting file session storage: %v", err)
+	}
+
+	handler, err := voicegpt.NewVoiceGPTHandler(sessions, &voicegpt.VoiceGPTOptions{
+		GPTModel: "gpt-4",
 	})
 	if err != nil {
 		log.Fatalf("Error initializing VoiceGPTHandler: %v", err)
 	}
 
 	r := mux.NewRouter()
+
+	r.HandleFunc("/session/{sessionId}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		sessionId := vars["sessionId"]
+
+		session, err := sessions.Get(r.Context(), sessionId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(session)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}).Methods("GET")
 
 	r.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
