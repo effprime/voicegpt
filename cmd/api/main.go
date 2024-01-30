@@ -26,6 +26,8 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/session/{sessionId}", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Expose-Headers", "X-Session-Id")
 		vars := mux.Vars(r)
 		sessionId := vars["sessionId"]
 
