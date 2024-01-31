@@ -71,8 +71,12 @@ func main() {
 			VoiceData: file,
 		})
 		if err != nil {
+			code := http.StatusInternalServerError
+			if err == voicegpt.ErrNoTranscription {
+				code = http.StatusBadRequest
+			}
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), code)
 			return
 		}
 

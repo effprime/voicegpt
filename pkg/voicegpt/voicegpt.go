@@ -3,6 +3,7 @@ package voicegpt
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -20,6 +21,10 @@ import (
 const (
 	OpenAIKeyEnvKey           = "OPENAI_KEY"
 	GoogleCloudCredentialsKey = "GOOGLE_APPLICATION_CREDENTIALS" // this is read by Google's lib, can't change
+)
+
+var (
+	ErrNoTranscription = errors.New("no transcription could be generated")
 )
 
 type VoiceGPTHandler struct {
@@ -71,6 +76,10 @@ func (v *VoiceGPTHandler) Handle(ctx context.Context, req *Request) (*Response, 
 	transcript, err := transcribeSpeech(ctx, voiceData)
 	if err != nil {
 		return nil, err
+	}
+
+	if transcript == "" {
+		return nil, ErrNoTranscription
 	}
 
 	log.Printf("Transcript: %s", transcript)
